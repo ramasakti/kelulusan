@@ -24,6 +24,14 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        User::updateOrCreate(
+            ['email' => 'admin@sekolah.sch.id'],
+            [
+                'name' => 'Administrator',
+                'password' => bcrypt('password'),
+            ]
+        );
+
         // Seed Mapel (Subjects)
         $subjects = [
             'Matematika',

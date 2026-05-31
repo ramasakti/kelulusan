@@ -258,7 +258,7 @@ export default function Kelulusan({ search, siswa, error }: KelulusanProps) {
                           <Hash className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-xs text-slate-400">NISN Siswa</p>
+                          <p className="text-xs text-slate-400">NISN</p>
                           <p className="text-sm font-semibold text-slate-800">{siswa.nisn}</p>
                         </div>
                       </div>
