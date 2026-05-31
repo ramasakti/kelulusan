@@ -49,6 +49,7 @@ export interface SiswaData {
   status_kelulusan: "LULUS" | "TIDAK LULUS";
   rata_rata: number;
   nilai: NilaiItem[];
+  tka: NilaiItem[];
 }
 
 export interface KelulusanProps {
@@ -311,6 +312,47 @@ export default function Kelulusan({ search, siswa, error }: KelulusanProps) {
                     </div>
                   </div>
 
+                  <Separator />
+
+                  {/* TKA Table */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <Award className="w-5 h-5 text-brand-secondary" />
+                        Nilai Tes Kemampuan Akademik (TKA)
+                      </h3>
+                    </div>
+
+                    <div className="overflow-hidden rounded-xl border border-slate-100 shadow-xs">
+                      <Table>
+                        <TableHeader className="bg-slate-50">
+                          <TableRow>
+                            <TableHead className="w-16 text-center font-semibold text-slate-700">No</TableHead>
+                            <TableHead className="font-semibold text-slate-700">Mata Pelajaran TKA</TableHead>
+                            <TableHead className="w-32 text-center font-semibold text-slate-700">Nilai</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {siswa.tka && siswa.tka.length > 0 ? (
+                            siswa.tka.map((item, index) => (
+                              <TableRow key={index} className="hover:bg-slate-50/40">
+                                <TableCell className="text-center font-medium text-slate-500">{index + 1}</TableCell>
+                                <TableCell className="font-semibold text-slate-800">{item.mata_pelajaran}</TableCell>
+                                <TableCell className="text-center font-bold text-brand-secondary">{item.nilai ?? "-"}</TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={3} className="text-center text-slate-400 py-8">
+                                Belum ada rincian nilai TKA untuk siswa ini.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
                 </div>
               )}
 
@@ -319,8 +361,8 @@ export default function Kelulusan({ search, siswa, error }: KelulusanProps) {
             {/* Card Footer with school motto / contact info */}
             <CardFooter className="bg-slate-50 p-6 flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 border-t border-slate-100 space-y-2 md:space-y-0 text-center md:text-left">
               <div>
-                <p className="font-medium text-slate-600">SMA Negeri Harapan Bangsa</p>
-                <p>Jl. Pendidikan No. 45, Jakarta Selatan</p>
+                <p className="font-medium text-slate-600">SMP Islam Parlaungan</p>
+                <p>Jl. Berbek I No. 2 Waru Sidoarjo</p>
               </div>
               <div className="text-slate-400">
                 Pusat Data Kelulusan Resmi © 2026. Seluruh hak cipta dilindungi.

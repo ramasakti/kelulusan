@@ -29,4 +29,12 @@ class Siswa extends Model
     {
         return $this->hasMany(Nilai::class, 'siswa_id');
     }
+
+    /**
+     * Get the nilai for the siswa.
+     */
+    public function tka(): HasMany
+    {
+        return $this->hasMany(TKA::class, 'siswa_id');
+    }
 }

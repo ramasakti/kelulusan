@@ -25,8 +25,8 @@ class KelulusanController extends Controller
             ]);
         }
 
-        // Cari siswa berdasarkan nisn dengan eager loading nilai dan mapel
-        $siswa = Siswa::with('nilai.mapel')
+        // Cari siswa berdasarkan nisn dengan eager loading nilai, mapel, dan tka
+        $siswa = Siswa::with(['nilai.mapel', 'tka'])
             ->where('nisn', $nisn)
             ->first();
 
@@ -53,6 +53,14 @@ class KelulusanController extends Controller
             ];
         })->values()->all();
 
+        // Transformasi format nilai TKA untuk dikirim ke props
+        $tkaFormatted = $siswa->tka->map(function ($item) {
+            return [
+                'mata_pelajaran' => $item->mapel,
+                'nilai' => $item->nilai,
+            ];
+        })->values()->all();
+
         // Kirim data ke Inertia
         return Inertia::render('kelulusan', [
             'search' => $nisn,
@@ -62,6 +70,7 @@ class KelulusanController extends Controller
                 'status_kelulusan' => $siswa->lulus ? 'LULUS' : 'TIDAK LULUS',
                 'rata_rata' => (float) $rataRata,
                 'nilai' => $nilaiFormatted,
+                'tka' => $tkaFormatted,
             ],
             'error' => null,
         ]);

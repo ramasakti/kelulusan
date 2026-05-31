@@ -42,29 +42,48 @@ class SiswaController extends Controller
         return redirect()->back()->with('success', 'Siswa berhasil dihapus.');
     }
 
-    /**
-     * Save student grades with database transaction.
-     */
     public function updateNilai(UpdateNilaiRequest $request, Siswa $siswa): RedirectResponse
     {
         $validated = $request->validated();
         $submittedNilai = $validated['nilai'] ?? [];
+        $submittedTka = $validated['tka'] ?? [];
 
-        DB::transaction(function () use ($siswa, $submittedNilai) {
-            // Dapatkan list mapel_id yang dikirimkan
+        DB::transaction(function () use ($siswa, $submittedNilai, $submittedTka) {
+            // 1. Proses Nilai Reguler
             $submittedMapelIds = collect($submittedNilai)->pluck('mapel_id')->toArray();
 
-            // Hapus nilai siswa yang mata pelajarannya tidak ada di data kiriman
+            // Hapus nilai reguler siswa yang tidak ada di data kiriman
             Nilai::where('siswa_id', $siswa->id)
                 ->whereNotIn('mapel_id', $submittedMapelIds)
                 ->delete();
 
-            // Update atau Insert nilai baru
+            // Update atau Insert nilai reguler baru
             foreach ($submittedNilai as $item) {
                 Nilai::updateOrCreate(
                     [
                         'siswa_id' => $siswa->id,
                         'mapel_id' => $item['mapel_id'],
+                    ],
+                    [
+                        'nilai' => $item['nilai'],
+                    ]
+                );
+            }
+
+            // 2. Proses Nilai TKA
+            $submittedTkaMapels = collect($submittedTka)->pluck('mapel')->toArray();
+
+            // Hapus nilai TKA siswa yang tidak ada di data kiriman
+            \App\Models\TKA::where('siswa_id', $siswa->id)
+                ->whereNotIn('mapel', $submittedTkaMapels)
+                ->delete();
+
+            // Update atau Insert nilai TKA baru
+            foreach ($submittedTka as $item) {
+                \App\Models\TKA::updateOrCreate(
+                    [
+                        'siswa_id' => $siswa->id,
+                        'mapel' => $item['mapel'],
                     ],
                     [
                         'nilai' => $item['nilai'],

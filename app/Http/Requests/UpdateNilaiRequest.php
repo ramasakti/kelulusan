@@ -23,6 +23,10 @@ class UpdateNilaiRequest extends FormRequest
             'nilai' => ['nullable', 'array'],
             'nilai.*.mapel_id' => ['required', 'exists:mapel,id', 'distinct'],
             'nilai.*.nilai' => ['required', 'integer', 'min:0', 'max:100'],
+
+            'tka' => ['nullable', 'array'],
+            'tka.*.mapel' => ['required', 'in:Matematika,Bahasa Indonesia', 'distinct'],
+            'tka.*.nilai' => ['required', 'integer', 'min:0', 'max:100'],
         ];
     }
 
@@ -38,6 +42,14 @@ class UpdateNilaiRequest extends FormRequest
             'nilai.*.nilai.integer' => 'Nilai harus berupa angka bulat.',
             'nilai.*.nilai.min' => 'Nilai minimal adalah 0.',
             'nilai.*.nilai.max' => 'Nilai maksimal adalah 100.',
+
+            'tka.*.mapel.distinct' => 'Setiap mata pelajaran TKA hanya boleh diisi satu kali.',
+            'tka.*.mapel.required' => 'Mata pelajaran TKA wajib dipilih.',
+            'tka.*.mapel.in' => 'Mata pelajaran TKA harus berupa Matematika atau Bahasa Indonesia.',
+            'tka.*.nilai.required' => 'Nilai TKA wajib diisi.',
+            'tka.*.nilai.integer' => 'Nilai TKA harus berupa angka bulat.',
+            'tka.*.nilai.min' => 'Nilai TKA minimal adalah 0.',
+            'tka.*.nilai.max' => 'Nilai TKA maksimal adalah 100.',
         ];
     }
 
@@ -49,6 +61,8 @@ class UpdateNilaiRequest extends FormRequest
         return [
             'nilai.*.mapel_id' => 'Mata Pelajaran',
             'nilai.*.nilai' => 'Nilai',
+            'tka.*.mapel' => 'Mata Pelajaran TKA',
+            'tka.*.nilai' => 'Nilai TKA',
         ];
     }
 }

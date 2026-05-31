@@ -62,12 +62,20 @@ export interface StudentGradeRelation {
   mapel?: Mapel;
 }
 
+export interface TkaGradeRelation {
+  id: number;
+  siswa_id: number;
+  mapel: "Matematika" | "Bahasa Indonesia";
+  nilai: number;
+}
+
 export interface Student {
   id: number;
   nisn: string;
   nama_siswa: string;
   lulus: boolean;
   nilai: StudentGradeRelation[];
+  tka?: TkaGradeRelation[];
   created_at?: string;
   updated_at?: string;
 }
@@ -113,6 +121,7 @@ export default function Dashboard({ mapel, siswa }: DashboardProps) {
 
   const nilaiForm = useForm({
     nilai: [] as { mapel_id: string; nilai: string }[],
+    tka: [] as { mapel: "Matematika" | "Bahasa Indonesia"; nilai: string }[],
   });
 
   // --- Handlers for Mapel CRUD ---
@@ -223,7 +232,17 @@ export default function Dashboard({ mapel, siswa }: DashboardProps) {
       mapel_id: String(grade.mapel_id),
       nilai: String(grade.nilai ?? ""),
     }));
-    nilaiForm.setData("nilai", activeGrades);
+
+    const tkaMatematika = item.tka?.find((t) => t.mapel === "Matematika")?.nilai ?? "";
+    const tkaBahasaIndo = item.tka?.find((t) => t.mapel === "Bahasa Indonesia")?.nilai ?? "";
+
+    nilaiForm.setData({
+      nilai: activeGrades,
+      tka: [
+        { mapel: "Matematika", nilai: String(tkaMatematika) },
+        { mapel: "Bahasa Indonesia", nilai: String(tkaBahasaIndo) },
+      ],
+    });
     nilaiForm.clearErrors();
     setActiveSiswaForNilai(item);
     setIsNilaiOpen(true);
@@ -257,6 +276,11 @@ export default function Dashboard({ mapel, siswa }: DashboardProps) {
   const handleNilaiSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeSiswaForNilai) return;
+
+    nilaiForm.transform((data) => ({
+      ...data,
+      tka: data.tka.filter((t) => t.nilai !== "" && t.nilai !== null && t.nilai !== undefined),
+    }));
 
     nilaiForm.post(`/siswa/${activeSiswaForNilai.id}/nilai`, {
       onSuccess: () => {
@@ -829,6 +853,56 @@ export default function Dashboard({ mapel, siswa }: DashboardProps) {
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* TKA Section */}
+            <div className="shrink-0 border-t border-slate-100 pt-4 px-2">
+              <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                <Award className="w-4 h-4 text-brand-secondary" />
+                Nilai Tes Kemampuan Akademik (TKA)
+              </span>
+            </div>
+
+            <div className="shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <div className="space-y-1.5">
+                <Label htmlFor="tka_matematika" className="font-semibold text-slate-700">TKA Matematika</Label>
+                <Input
+                  id="tka_matematika"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="Nilai Matematika (0-100)"
+                  value={nilaiForm.data.tka[0]?.nilai ?? ""}
+                  onChange={(e) => {
+                    const updatedTka = [...nilaiForm.data.tka];
+                    if (updatedTka[0]) {
+                      updatedTka[0].nilai = e.target.value;
+                      nilaiForm.setData("tka", updatedTka);
+                    }
+                  }}
+                  className="focus-visible:ring-brand-secondary text-slate-700 font-bold bg-white"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="tka_bahasa_indo" className="font-semibold text-slate-700">TKA Bahasa Indonesia</Label>
+                <Input
+                  id="tka_bahasa_indo"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="Nilai B. Indonesia (0-100)"
+                  value={nilaiForm.data.tka[1]?.nilai ?? ""}
+                  onChange={(e) => {
+                    const updatedTka = [...nilaiForm.data.tka];
+                    if (updatedTka[1]) {
+                      updatedTka[1].nilai = e.target.value;
+                      nilaiForm.setData("tka", updatedTka);
+                    }
+                  }}
+                  className="focus-visible:ring-brand-secondary text-slate-700 font-bold bg-white"
+                />
+              </div>
             </div>
 
             {/* Footer buttons */}

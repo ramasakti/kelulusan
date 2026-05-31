@@ -15,7 +15,7 @@ class DashboardController extends Controller
     public function index(): InertiaResponse
     {
         $mapel = Mapel::orderBy('nama_mapel')->get();
-        $siswa = Siswa::with('nilai.mapel')
+        $siswa = Siswa::with(['nilai.mapel', 'tka'])
             ->orderBy('nama_siswa')
             ->get();
 
