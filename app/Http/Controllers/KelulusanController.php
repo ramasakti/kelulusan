@@ -16,12 +16,52 @@ class KelulusanController extends Controller
     {
         $nisn = $request->query('nisn');
 
+        $settingsPath = storage_path('app/settings/range.json');
+        $settings = [
+            'start' => now()->addDay()->format('Y-m-d\TH:i'),
+            'end' => now()->addDays(5)->format('Y-m-d\TH:i'),
+        ];
+        if (file_exists($settingsPath)) {
+            $settings = json_decode(file_get_contents($settingsPath), true);
+        }
+
+        $now = now();
+        $start = \Illuminate\Support\Carbon::parse($settings['start']);
+        $end = \Illuminate\Support\Carbon::parse($settings['end']);
+
+        $isBefore = $now->lt($start);
+        $isAfter = $now->gt($end);
+
         // Jika query nisn kosong, tampilkan landing page tanpa data siswa
         if (blank($nisn)) {
             return Inertia::render('kelulusan', [
                 'search' => null,
                 'siswa' => null,
                 'error' => null,
+                'settings' => $settings,
+                'serverTime' => $now->toIso8601String(),
+            ]);
+        }
+
+        // Sebelum countdown start, jangan tampilkan data/error jika dipaksa search
+        if ($isBefore) {
+            return Inertia::render('kelulusan', [
+                'search' => $nisn,
+                'siswa' => null,
+                'error' => 'Akses ditolak: Pengumuman kelulusan belum dibuka.',
+                'settings' => $settings,
+                'serverTime' => $now->toIso8601String(),
+            ]);
+        }
+
+        // Setelah countdown end, jangan tampilkan data/error jika dipaksa search
+        if ($isAfter) {
+            return Inertia::render('kelulusan', [
+                'search' => $nisn,
+                'siswa' => null,
+                'error' => 'Akses ditolak: Periode pengumuman kelulusan telah berakhir.',
+                'settings' => $settings,
+                'serverTime' => $now->toIso8601String(),
             ]);
         }
 
@@ -36,6 +76,8 @@ class KelulusanController extends Controller
                 'search' => $nisn,
                 'siswa' => null,
                 'error' => 'Data siswa tidak ditemukan',
+                'settings' => $settings,
+                'serverTime' => $now->toIso8601String(),
             ]);
         }
 
@@ -73,6 +115,8 @@ class KelulusanController extends Controller
                 'tka' => $tkaFormatted,
             ],
             'error' => null,
+            'settings' => $settings,
+            'serverTime' => $now->toIso8601String(),
         ]);
     }
 }

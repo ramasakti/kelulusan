@@ -29,6 +29,9 @@ Route::middleware('auth')->group(function () {
     
     // Dynamic Row Grades update route
     Route::post('/siswa/{siswa}/nilai', [SiswaController::class, 'updateNilai'])->name('siswa.nilai.update');
+    
+    // Update countdown settings route
+    Route::post('/dashboard/settings', [DashboardController::class, 'updateSettings'])->name('dashboard.settings.update');
 });
 
 // Welcome / Static pages

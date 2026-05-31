@@ -80,12 +80,18 @@ export interface Student {
   updated_at?: string;
 }
 
+export interface CountdownSettings {
+  start: string;
+  end: string;
+}
+
 export interface DashboardProps {
   mapel: Mapel[];
   siswa: Student[];
+  settings: CountdownSettings;
 }
 
-export default function Dashboard({ mapel, siswa }: DashboardProps) {
+export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
   // Active Tab State (default: mapel)
   const [activeTab, setActiveTab] = useState("mapel");
 
@@ -123,6 +129,18 @@ export default function Dashboard({ mapel, siswa }: DashboardProps) {
     nilai: [] as { mapel_id: string; nilai: string }[],
     tka: [] as { mapel: "Matematika" | "Bahasa Indonesia"; nilai: string }[],
   });
+
+  const settingsForm = useForm({
+    start: settings?.start ? settings.start.substring(0, 16) : "",
+    end: settings?.end ? settings.end.substring(0, 16) : "",
+  });
+
+  const handleSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    settingsForm.post("/dashboard/settings", {
+      preserveScroll: true,
+    });
+  };
 
   // --- Handlers for Mapel CRUD ---
   const openAddMapel = () => {
@@ -335,7 +353,7 @@ export default function Dashboard({ mapel, siswa }: DashboardProps) {
             <button
               onClick={() => setActiveTab("mapel")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === "mapel" 
+                activeTab === "mapel" || activeTab === "siswa"
                   ? "bg-white/15 text-white shadow-xs" 
                   : "text-white/70 hover:text-white hover:bg-white/5"
               }`}
@@ -390,16 +408,21 @@ export default function Dashboard({ mapel, siswa }: DashboardProps) {
                     <Users className="w-4 h-4" />
                     Siswa
                   </TabsTrigger>
+                  <TabsTrigger value="settings" className="gap-2">
+                    <Settings className="w-4 h-4" />
+                    Pengaturan Waktu
+                  </TabsTrigger>
                 </TabsList>
                 
                 {/* Dynamically display action button on top-right based on active tab */}
-                {activeTab === "mapel" ? (
-                  <Button onClick={openAddMapel} className="bg-brand-primary hover:bg-brand-primary/95 text-white gap-1.5 rounded-lg cursor-pointer">
+                {activeTab === "mapel" && (
+                  <Button onClick={openAddMapel} className="bg-brand-primary hover:bg-brand-primary/95 text-white gap-1.5 rounded-lg cursor-pointer animate-in fade-in-50 duration-200">
                     <Plus className="w-4 h-4" />
                     Tambah Mata Pelajaran
                   </Button>
-                ) : (
-                  <Button onClick={openAddSiswa} className="bg-brand-primary hover:bg-brand-primary/95 text-white gap-1.5 rounded-lg cursor-pointer">
+                )}
+                {activeTab === "siswa" && (
+                  <Button onClick={openAddSiswa} className="bg-brand-primary hover:bg-brand-primary/95 text-white gap-1.5 rounded-lg cursor-pointer animate-in fade-in-50 duration-200">
                     <Plus className="w-4 h-4" />
                     Tambah Siswa
                   </Button>
@@ -541,6 +564,84 @@ export default function Dashboard({ mapel, siswa }: DashboardProps) {
                         )}
                       </TableBody>
                     </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Settings Tab Content */}
+              <TabsContent value="settings">
+                <Card className="border-none shadow-xs bg-white rounded-xl overflow-hidden mt-4 max-w-2xl mx-auto animate-in fade-in-50 slide-in-from-bottom-4 duration-300">
+                  <CardHeader className="border-b border-slate-50 px-6 py-4">
+                    <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                      <Settings className="w-5 h-5 text-brand-primary" />
+                      Pengaturan Waktu Pengumuman
+                    </CardTitle>
+                    <CardDescription>
+                      Atur rentang waktu (start & end datetime) kapan pencarian data kelulusan siswa dapat diakses oleh publik.
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="p-6">
+                    <form onSubmit={handleSettingsSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="start_time" className="font-semibold text-slate-700">Waktu Mulai (Start)</Label>
+                          <Input
+                            id="start_time"
+                            type="datetime-local"
+                            required
+                            value={settingsForm.data.start}
+                            onChange={(e) => settingsForm.setData("start", e.target.value)}
+                            disabled={settingsForm.processing}
+                            className="focus-visible:ring-brand-primary"
+                          />
+                          <p className="text-[10px] text-slate-400">Pencarian status kelulusan akan dibuka mulai tanggal dan waktu ini.</p>
+                          {settingsForm.errors.start && (
+                            <p className="text-xs text-rose-500 font-medium mt-1">{settingsForm.errors.start}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="end_time" className="font-semibold text-slate-700">Waktu Selesai (End)</Label>
+                          <Input
+                            id="end_time"
+                            type="datetime-local"
+                            required
+                            value={settingsForm.data.end}
+                            onChange={(e) => settingsForm.setData("end", e.target.value)}
+                            disabled={settingsForm.processing}
+                            className="focus-visible:ring-brand-primary"
+                          />
+                          <p className="text-[10px] text-slate-400">Pencarian status kelulusan akan ditutup setelah melewati tanggal dan waktu ini.</p>
+                          {settingsForm.errors.end && (
+                            <p className="text-xs text-rose-500 font-medium mt-1">{settingsForm.errors.end}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="border-t border-slate-100 pt-6 flex items-center justify-between">
+                        <div className="text-xs text-slate-400">
+                          Status file: <Badge variant="success" className="rounded-full bg-emerald-50 text-emerald-700 font-bold border-none">range.json terhubung</Badge>
+                        </div>
+                        <Button 
+                          type="submit" 
+                          disabled={settingsForm.processing}
+                          className="bg-brand-primary hover:bg-brand-primary/95 text-white font-semibold rounded-lg shadow-sm gap-2 cursor-pointer transition-all"
+                        >
+                          {settingsForm.processing ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                              Menyimpan...
+                            </>
+                          ) : (
+                            <>
+                              <Check className="w-4 h-4" />
+                              Simpan Pengaturan
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
                   </CardContent>
                 </Card>
               </TabsContent>

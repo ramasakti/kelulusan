@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Head, useForm } from "@inertiajs/react";
 import {
   Search,
@@ -13,7 +13,10 @@ import {
   XCircle,
   School,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Clock,
+  Lock,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,16 +55,53 @@ export interface SiswaData {
   tka: NilaiItem[];
 }
 
+export interface CountdownSettings {
+  start: string;
+  end: string;
+}
+
 export interface KelulusanProps {
   search: string | null;
   siswa: SiswaData | null;
   error: string | null;
+  settings: CountdownSettings;
+  serverTime: string;
 }
 
-export default function Kelulusan({ search, siswa, error }: KelulusanProps) {
+export default function Kelulusan({ search, siswa, error, settings, serverTime }: KelulusanProps) {
   const { data, setData, get, processing } = useForm({
     nisn: search || "",
   });
+
+  const targetDate = new Date(settings?.start || new Date());
+  const endDate = new Date(settings?.end || new Date());
+  
+  const [now, setNow] = useState<Date>(() => new Date(serverTime || new Date()));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow((prev) => new Date(prev.getTime() + 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const timeDiffStart = targetDate.getTime() - now.getTime();
+  const timeDiffEnd = endDate.getTime() - now.getTime();
+
+  const isBefore = timeDiffStart > 0;
+  const isAfter = timeDiffEnd <= 0;
+  const isActive = !isBefore && !isAfter;
+
+  const getCountdownParts = (diffMs: number) => {
+    if (diffMs <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    const seconds = Math.floor((diffMs / 1000) % 60);
+    const minutes = Math.floor((diffMs / 1000 / 60) % 60);
+    const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return { days, hours, minutes, seconds };
+  };
+
+  const countdown = getCountdownParts(timeDiffStart);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,9 +145,22 @@ export default function Kelulusan({ search, siswa, error }: KelulusanProps) {
 
                 {/* School Information */}
                 <div className="space-y-2">
-                  <span className="text-xs font-semibold tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full text-white/90 backdrop-blur-xs">
-                    Portal Resmi Sekolah
-                  </span>
+                  {isBefore ? (
+                    <span className="text-xs font-semibold tracking-widest uppercase bg-amber-500/20 border border-amber-500/30 px-3.5 py-1 rounded-full text-amber-300 backdrop-blur-xs flex items-center gap-1.5 w-fit mx-auto animate-pulse">
+                      <Lock className="w-3.5 h-3.5" />
+                      Pengecekan Belum Dibuka
+                    </span>
+                  ) : isAfter ? (
+                    <span className="text-xs font-semibold tracking-widest uppercase bg-rose-500/20 border border-rose-500/30 px-3.5 py-1 rounded-full text-rose-300 backdrop-blur-xs flex items-center gap-1.5 w-fit mx-auto">
+                      <XCircle className="w-3.5 h-3.5" />
+                      Pengecekan Ditutup
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold tracking-widest uppercase bg-emerald-500/20 border border-emerald-500/30 px-3.5 py-1 rounded-full text-emerald-300 backdrop-blur-xs flex items-center gap-1.5 w-fit mx-auto">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      Portal Pengumuman Aktif
+                    </span>
+                  )}
                   <h2 className="text-lg md:text-xl font-medium tracking-wide text-brand-soft-bg">
                     SMP ISLAM PARLAUNGAN
                   </h2>
@@ -115,45 +168,103 @@ export default function Kelulusan({ search, siswa, error }: KelulusanProps) {
                     Pengumuman Kelulusan
                   </h1>
                   <p className="text-xs md:text-sm max-w-md mx-auto text-white/80 leading-relaxed font-light">
-                    Masukkan Nomor Induk Siswa Nasional (NISN) Anda pada kolom di bawah untuk memeriksa status kelulusan tahun ajaran 2025/2026.
+                    {isBefore 
+                      ? "Pengecekan status kelulusan siswa tahun ajaran 2025/2026 belum dibuka. Silakan tunggu hingga hitung mundur selesai."
+                      : isAfter 
+                      ? "Masa pencarian status kelulusan siswa tahun ajaran 2025/2026 telah berakhir."
+                      : "Masukkan Nomor Induk Siswa Nasional (NISN) Anda pada kolom di bawah untuk memeriksa status kelulusan tahun ajaran 2025/2026."
+                    }
                   </p>
                 </div>
 
-                {/* Search Form */}
-                <form onSubmit={handleSubmit} className="w-full max-w-md space-y-3 pt-2">
-                  <div className="relative flex items-center">
-                    <div className="absolute left-3.5 text-muted-foreground pointer-events-none flex items-center">
-                      <Hash className="w-4 h-4 text-brand-primary" />
+                {/* Conditional Form / Countdown Display */}
+                {isBefore ? (
+                  <div className="w-full max-w-lg space-y-6 pt-4 animate-in fade-in duration-500">
+                    {/* Countdown Columns */}
+                    <div className="grid grid-cols-4 gap-3 md:gap-4 max-w-md mx-auto">
+                      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 md:p-4 text-center shadow-lg transition-transform hover:scale-[1.02] flex flex-col justify-center min-w-[70px]">
+                        <span className="text-2xl md:text-4xl font-black text-white tracking-tight drop-shadow-sm">
+                          {String(countdown.days).padStart(2, "0")}
+                        </span>
+                        <span className="text-[10px] md:text-xs font-medium text-brand-soft-bg/85 uppercase mt-1">Hari</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 md:p-4 text-center shadow-lg transition-transform hover:scale-[1.02] flex flex-col justify-center min-w-[70px]">
+                        <span className="text-2xl md:text-4xl font-black text-white tracking-tight drop-shadow-sm">
+                          {String(countdown.hours).padStart(2, "0")}
+                        </span>
+                        <span className="text-[10px] md:text-xs font-medium text-brand-soft-bg/85 uppercase mt-1">Jam</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 md:p-4 text-center shadow-lg transition-transform hover:scale-[1.02] flex flex-col justify-center min-w-[70px]">
+                        <span className="text-2xl md:text-4xl font-black text-white tracking-tight drop-shadow-sm">
+                          {String(countdown.minutes).padStart(2, "0")}
+                        </span>
+                        <span className="text-[10px] md:text-xs font-medium text-brand-soft-bg/85 uppercase mt-1">Menit</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 md:p-4 text-center shadow-lg transition-transform hover:scale-[1.02] flex flex-col justify-center min-w-[70px]">
+                        <span className="text-2xl md:text-4xl font-black text-amber-300 tracking-tight drop-shadow-sm animate-pulse">
+                          {String(countdown.seconds).padStart(2, "0")}
+                        </span>
+                        <span className="text-[10px] md:text-xs font-medium text-brand-soft-bg/85 uppercase mt-1">Detik</span>
+                      </div>
                     </div>
-                    <Input
-                      type="text"
-                      placeholder="Masukkan 10 digit NISN..."
-                      value={data.nisn}
-                      onChange={(e) => setData("nisn", e.target.value)}
-                      disabled={processing}
-                      maxLength={15}
-                      className="pl-10 pr-4 h-12 bg-white text-slate-800 border-none shadow-lg rounded-xl text-base placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 transition-all w-full"
-                    />
-                  </div>
 
-                  <Button
-                    type="submit"
-                    disabled={processing || !data.nisn.trim()}
-                    className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl cursor-pointer disabled:cursor-not-allowed bg-brand-primary hover:bg-brand-primary/95 text-white flex items-center justify-center gap-2 border border-white/10"
-                  >
-                    {processing ? (
-                      <>
-                        <RefreshCw className="w-5 h-5 animate-spin" />
-                        Memproses Data...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="w-5 h-5" />
-                        Cek Kelulusan Siswa
-                      </>
-                    )}
-                  </Button>
-                </form>
+                    {/* Announcement Information Date */}
+                    <div className="text-xs text-white/90 font-medium flex items-center justify-center gap-1.5 bg-black/15 py-2.5 px-4 rounded-xl w-fit mx-auto border border-white/10">
+                      <Calendar className="w-4 h-4 text-brand-soft-bg" />
+                      <span>
+                        Dibuka pada: <strong>{new Date(settings.start).toLocaleString("id-ID", { dateStyle: "long", timeStyle: "short" })} WIB</strong>
+                      </span>
+                    </div>
+                  </div>
+                ) : isAfter ? (
+                  <div className="w-full max-w-lg pt-4 animate-in fade-in duration-500">
+                    <div className="flex flex-col items-center bg-black/15 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-xl text-center space-y-3 max-w-md mx-auto">
+                      <div className="p-3 bg-rose-500/20 rounded-full border border-rose-500/30">
+                        <Lock className="w-6 h-6 text-rose-300" />
+                      </div>
+                      <h3 className="text-base font-bold text-white tracking-tight">Pencarian Dinonaktifkan</h3>
+                      <p className="text-xs text-white/80 leading-relaxed">
+                        Periode pengecekan status kelulusan telah ditutup pada <strong>{new Date(settings.end).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })} WIB</strong>.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  /* Search Form */
+                  <form onSubmit={handleSubmit} className="w-full max-w-md space-y-3 pt-2 animate-in fade-in duration-300">
+                    <div className="relative flex items-center">
+                      <div className="absolute left-3.5 text-muted-foreground pointer-events-none flex items-center">
+                        <Hash className="w-4 h-4 text-brand-primary" />
+                      </div>
+                      <Input
+                        type="text"
+                        placeholder="Masukkan 10 digit NISN..."
+                        value={data.nisn}
+                        onChange={(e) => setData("nisn", e.target.value)}
+                        disabled={processing}
+                        maxLength={15}
+                        className="pl-10 pr-4 h-12 bg-white text-slate-800 border-none shadow-lg rounded-xl text-base placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 transition-all w-full"
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={processing || !data.nisn.trim()}
+                      className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl cursor-pointer disabled:cursor-not-allowed bg-brand-primary hover:bg-brand-primary/95 text-white flex items-center justify-center gap-2 border border-white/10"
+                    >
+                      {processing ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                          Memproses Data...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="w-5 h-5" />
+                          Cek Kelulusan Siswa
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
 
               </div>
             </div>
