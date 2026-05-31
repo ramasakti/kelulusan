@@ -17,18 +17,10 @@ class DatabaseSeeder extends Seeder
     {
         // Seed Test User
         User::updateOrCreate(
-            ['email' => 'test@example.com'],
+            ['email' => 'parlaungan.sch@gmail.com'],
             [
-                'name' => 'Test User',
-                'password' => bcrypt('password'),
-            ]
-        );
-
-        User::updateOrCreate(
-            ['email' => 'admin@sekolah.sch.id'],
-            [
-                'name' => 'Administrator',
-                'password' => bcrypt('password'),
+                'name' => 'Admin Sekolah',
+                'password' => bcrypt('parlaungan1977'),
             ]
         );
 
@@ -48,92 +40,92 @@ class DatabaseSeeder extends Seeder
             $mapelModels[$subjectName] = Mapel::firstOrCreate(['nama_mapel' => $subjectName]);
         }
 
-        // Seed Siswa & Nilai
-        // 1. Budi Santoso (Lulus)
-        $budi = Siswa::updateOrCreate(
-            ['nisn' => '1234567890'],
-            [
-                'nama_siswa' => 'Budi Santoso',
-                'lulus' => true,
-            ]
-        );
+        // // Seed Siswa & Nilai
+        // // 1. Budi Santoso (Lulus)
+        // $budi = Siswa::updateOrCreate(
+        //     ['nisn' => '1234567890'],
+        //     [
+        //         'nama_siswa' => 'Budi Santoso',
+        //         'lulus' => true,
+        //     ]
+        // );
 
-        $budiGrades = [
-            'Matematika' => 90,
-            'Bahasa Indonesia' => 81,
-            'Bahasa Inggris' => 85,
-            'Fisika' => 88,
-            'Kimia' => 83,
-            'Biologi' => 87,
-            'Sejarah' => 90,
-        ];
+        // $budiGrades = [
+        //     'Matematika' => 90,
+        //     'Bahasa Indonesia' => 81,
+        //     'Bahasa Inggris' => 85,
+        //     'Fisika' => 88,
+        //     'Kimia' => 83,
+        //     'Biologi' => 87,
+        //     'Sejarah' => 90,
+        // ];
 
-        foreach ($budiGrades as $subject => $grade) {
-            Nilai::updateOrCreate(
-                [
-                    'siswa_id' => $budi->id,
-                    'mapel_id' => $mapelModels[$subject]->id,
-                ],
-                ['nilai' => $grade]
-            );
-        }
+        // foreach ($budiGrades as $subject => $grade) {
+        //     Nilai::updateOrCreate(
+        //         [
+        //             'siswa_id' => $budi->id,
+        //             'mapel_id' => $mapelModels[$subject]->id,
+        //         ],
+        //         ['nilai' => $grade]
+        //     );
+        // }
 
-        // 2. Ani Lestari (Lulus)
-        $ani = Siswa::updateOrCreate(
-            ['nisn' => '0987654321'],
-            [
-                'nama_siswa' => 'Ani Lestari',
-                'lulus' => true,
-            ]
-        );
+        // // 2. Ani Lestari (Lulus)
+        // $ani = Siswa::updateOrCreate(
+        //     ['nisn' => '0987654321'],
+        //     [
+        //         'nama_siswa' => 'Ani Lestari',
+        //         'lulus' => true,
+        //     ]
+        // );
 
-        $aniGrades = [
-            'Matematika' => 95,
-            'Bahasa Indonesia' => 92,
-            'Bahasa Inggris' => 94,
-            'Fisika' => 90,
-            'Kimia' => 88,
-            'Biologi' => 91,
-            'Sejarah' => 93,
-        ];
+        // $aniGrades = [
+        //     'Matematika' => 95,
+        //     'Bahasa Indonesia' => 92,
+        //     'Bahasa Inggris' => 94,
+        //     'Fisika' => 90,
+        //     'Kimia' => 88,
+        //     'Biologi' => 91,
+        //     'Sejarah' => 93,
+        // ];
 
-        foreach ($aniGrades as $subject => $grade) {
-            Nilai::updateOrCreate(
-                [
-                    'siswa_id' => $ani->id,
-                    'mapel_id' => $mapelModels[$subject]->id,
-                ],
-                ['nilai' => $grade]
-            );
-        }
+        // foreach ($aniGrades as $subject => $grade) {
+        //     Nilai::updateOrCreate(
+        //         [
+        //             'siswa_id' => $ani->id,
+        //             'mapel_id' => $mapelModels[$subject]->id,
+        //         ],
+        //         ['nilai' => $grade]
+        //     );
+        // }
 
-        // 3. Eko Prasetyo (Tidak Lulus)
-        $eko = Siswa::updateOrCreate(
-            ['nisn' => '1122334455'],
-            [
-                'nama_siswa' => 'Eko Prasetyo',
-                'lulus' => false,
-            ]
-        );
+        // // 3. Eko Prasetyo (Tidak Lulus)
+        // $eko = Siswa::updateOrCreate(
+        //     ['nisn' => '1122334455'],
+        //     [
+        //         'nama_siswa' => 'Eko Prasetyo',
+        //         'lulus' => false,
+        //     ]
+        // );
 
-        $ekoGrades = [
-            'Matematika' => 55,
-            'Bahasa Indonesia' => 60,
-            'Bahasa Inggris' => 58,
-            'Fisika' => 50,
-            'Kimia' => 52,
-            'Biologi' => 55,
-            'Sejarah' => 62,
-        ];
+        // $ekoGrades = [
+        //     'Matematika' => 55,
+        //     'Bahasa Indonesia' => 60,
+        //     'Bahasa Inggris' => 58,
+        //     'Fisika' => 50,
+        //     'Kimia' => 52,
+        //     'Biologi' => 55,
+        //     'Sejarah' => 62,
+        // ];
 
-        foreach ($ekoGrades as $subject => $grade) {
-            Nilai::updateOrCreate(
-                [
-                    'siswa_id' => $eko->id,
-                    'mapel_id' => $mapelModels[$subject]->id,
-                ],
-                ['nilai' => $grade]
-            );
-        }
+        // foreach ($ekoGrades as $subject => $grade) {
+        //     Nilai::updateOrCreate(
+        //         [
+        //             'siswa_id' => $eko->id,
+        //             'mapel_id' => $mapelModels[$subject]->id,
+        //         ],
+        //         ['nilai' => $grade]
+        //     );
+        // }
     }
 }
