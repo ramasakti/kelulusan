@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Head, useForm, router } from "@inertiajs/react";
 import { 
   School, 
@@ -17,7 +17,10 @@ import {
   Award,
   Hash,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  UploadCloud,
+  Download,
+  FileSpreadsheet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,6 +116,12 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
   // --- Atur Nilai Dialog States ---
   const [isNilaiOpen, setIsNilaiOpen] = useState(false);
   const [activeSiswaForNilai, setActiveSiswaForNilai] = useState<Student | null>(null);
+
+  // --- Import Siswa Dialog States ---
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   // --- Forms ---
   const mapelForm = useForm({
@@ -232,6 +241,36 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
   const confirmDeleteSiswa = (item: Student) => {
     setSiswaToDelete(item);
     setIsDeleteSiswaOpen(true);
+  };
+
+  // --- Import Handlers ---
+  const openImport = () => {
+    setImportFile(null);
+    if (importFileRef.current) importFileRef.current.value = "";
+    setIsImportOpen(true);
+  };
+
+  const handleImportSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importFile) return;
+
+    setIsImporting(true);
+    const formData = new FormData();
+    formData.append("file", importFile);
+    formData.append("_token", (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? "");
+
+    router.post("/siswa/import", formData, {
+      forceFormData: true,
+      onSuccess: () => {
+        setIsImportOpen(false);
+        setImportFile(null);
+      },
+      onFinish: () => setIsImporting(false),
+    });
+  };
+
+  const handleDownloadTemplate = () => {
+    window.location.href = "/siswa/template-download";
   };
 
   const handleDeleteSiswa = () => {
@@ -422,10 +461,20 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                   </Button>
                 )}
                 {activeTab === "siswa" && (
-                  <Button onClick={openAddSiswa} className="bg-brand-primary hover:bg-brand-primary/95 text-white gap-1.5 rounded-lg cursor-pointer animate-in fade-in-50 duration-200">
-                    <Plus className="w-4 h-4" />
-                    Tambah Siswa
-                  </Button>
+                  <div className="flex items-center gap-2 animate-in fade-in-50 duration-200">
+                    <Button
+                      variant="outline"
+                      onClick={openImport}
+                      className="gap-1.5 rounded-lg cursor-pointer border-brand-primary/30 text-brand-primary hover:bg-brand-primary/5"
+                    >
+                      <UploadCloud className="w-4 h-4" />
+                      Import Excel
+                    </Button>
+                    <Button onClick={openAddSiswa} className="bg-brand-primary hover:bg-brand-primary/95 text-white gap-1.5 rounded-lg cursor-pointer">
+                      <Plus className="w-4 h-4" />
+                      Tambah Siswa
+                    </Button>
+                  </div>
                 )}
               </div>
 
@@ -1026,6 +1075,92 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
               </Button>
             </DialogFooter>
 
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 6. Dialog Import Siswa dari Excel */}
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+              Import Siswa dari Excel
+            </DialogTitle>
+            <DialogDescription>
+              Unggah file Excel (.xlsx / .xls / .csv) sesuai format template. Data NISN yang sudah ada akan diperbarui.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Download Template Banner */}
+          <div className="my-1 flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <Download className="w-5 h-5 shrink-0 text-emerald-600" />
+              <div>
+                <p className="text-sm font-semibold text-emerald-800">Unduh Template Excel</p>
+                <p className="text-[11px] text-emerald-600">Berisi kolom No, NISN, dan Nama</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadTemplate}
+              className="shrink-0 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors cursor-pointer"
+            >
+              Download
+            </button>
+          </div>
+
+          <form onSubmit={handleImportSubmit} className="space-y-4">
+            {/* File Drop Zone */}
+            <div
+              className="relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center transition-colors hover:border-brand-primary/40 hover:bg-slate-50/80 cursor-pointer"
+              onClick={() => importFileRef.current?.click()}
+            >
+              <UploadCloud className="w-9 h-9 text-slate-300" />
+              {importFile ? (
+                <>
+                  <p className="text-sm font-bold text-brand-primary">{importFile.name}</p>
+                  <p className="text-xs text-slate-400">
+                    {(importFile.size / 1024).toFixed(1)} KB — klik untuk ganti file
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-slate-600">Klik untuk pilih file</p>
+                  <p className="text-xs text-slate-400">Format: .xlsx, .xls, .csv — Maks. 5 MB</p>
+                </>
+              )}
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+
+            <DialogFooter className="pt-2 border-t border-slate-50">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsImportOpen(false)}
+                className="cursor-pointer"
+                disabled={isImporting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={!importFile || isImporting}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer gap-1.5 disabled:opacity-50"
+              >
+                {isImporting ? (
+                  <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Mengimpor...</>
+                ) : (
+                  <><UploadCloud className="w-3.5 h-3.5" /> Mulai Import</>
+                )}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

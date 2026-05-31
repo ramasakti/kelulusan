@@ -26,6 +26,11 @@ Route::middleware('auth')->group(function () {
     // Resource CRUDs via dialogs
     Route::resource('mapel', MapelController::class)->only(['store', 'update', 'destroy']);
     Route::resource('siswa', SiswaController::class)->only(['store', 'update', 'destroy']);
+
+    // Import siswa from Excel
+    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+    // Download blank Excel template
+    Route::get('/siswa/template-download', [SiswaController::class, 'downloadTemplate'])->name('siswa.template.download');
     
     // Dynamic Row Grades update route
     Route::post('/siswa/{siswa}/nilai', [SiswaController::class, 'updateNilai'])->name('siswa.nilai.update');
