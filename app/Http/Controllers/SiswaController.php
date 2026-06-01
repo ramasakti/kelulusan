@@ -194,7 +194,8 @@ class SiswaController extends Controller
 
     /**
      * Download an Excel template for grade (nilai) import.
-     * Column A: No, Column B: Nama Siswa (pre-filled), Column C+: Mapel names.
+     * Column A: No, Column B: Nama Siswa (pre-filled),
+     * Column C+: Mapel names, then TKA Matematika & TKA Bahasa Indonesia.
      */
     public function downloadNilaiTemplate()
     {
@@ -202,16 +203,22 @@ class SiswaController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Import Nilai');
 
-        $allSiswa = Siswa::orderBy('nama_siswa')->get();
+        $allSiswa = Siswa::with(['nilai', 'tka'])->orderBy('nama_siswa')->get();
         $allMapel = Mapel::orderBy('nama_mapel')->get();
 
         // --- Build header row ---
+        // Regular mapel columns
         $headers = ['No', 'Nama Siswa'];
         foreach ($allMapel as $m) {
             $headers[] = $m->nama_mapel;
         }
+        // TKA columns appended at the end
+        $tkaHeaders = ['TKA Matematika', 'TKA Bahasa Indonesia'];
+        foreach ($tkaHeaders as $tkaHeader) {
+            $headers[] = $tkaHeader;
+        }
 
-        $lastColIndex = count($headers) - 1;
+        $lastColIndex  = count($headers) - 1;
         $lastColLetter = $this->columnLetter($lastColIndex);
 
         foreach ($headers as $col => $header) {
@@ -219,9 +226,11 @@ class SiswaController extends Controller
             $sheet->setCellValue($cell, $header);
         }
 
-        // Style header row
-        $headerRange = 'A1:' . $lastColLetter . '1';
-        $sheet->getStyle($headerRange)->applyFromArray([
+        // Style regular header columns (deep navy)
+        $mapelEndColIndex  = count($allMapel) + 1; // 0-based index of the last mapel column
+        $mapelEndColLetter = $this->columnLetter($mapelEndColIndex);
+        $regularHeaderRange = 'A1:' . $mapelEndColLetter . '1';
+        $sheet->getStyle($regularHeaderRange)->applyFromArray([
             'font' => [
                 'bold'  => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -235,54 +244,85 @@ class SiswaController extends Controller
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
                 'vertical'   => Alignment::VERTICAL_CENTER,
             ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => '1E3A5F'],
-                ],
+        ]);
+
+        // Style TKA header columns (warm amber)
+        $tkaStartColIndex  = $mapelEndColIndex + 1;
+        $tkaStartColLetter = $this->columnLetter($tkaStartColIndex);
+        $tkaHeaderRange    = $tkaStartColLetter . '1:' . $lastColLetter . '1';
+        $sheet->getStyle($tkaHeaderRange)->applyFromArray([
+            'font' => [
+                'bold'  => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size'  => 11,
+            ],
+            'fill' => [
+                'fillType'   => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'B45309'], // amber-700
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical'   => Alignment::VERTICAL_CENTER,
             ],
         ]);
+
         $sheet->getRowDimension(1)->setRowHeight(24);
 
-        // --- Fill student names (pre-filled, read-only feel) ---
+        // --- Fill student rows ---
         $row = 2;
         foreach ($allSiswa as $index => $s) {
             $sheet->setCellValue('A' . $row, $index + 1);
             $sheet->setCellValue('B' . $row, $s->nama_siswa);
 
-            // Style the number column
+            // Style number column
             $sheet->getStyle('A' . $row)->applyFromArray([
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                'font' => ['color' => ['rgb' => '888888']],
+                'font'      => ['color' => ['rgb' => '888888']],
             ]);
 
-            // Style the name column with a subtle background to indicate read-only
+            // Style name column (subtle read-only bg)
             $sheet->getStyle('B' . $row)->applyFromArray([
                 'fill' => [
                     'fillType'   => Fill::FILL_SOLID,
                     'startColor' => ['rgb' => 'F1F5F9'],
                 ],
                 'font' => [
-                    'bold' => true,
+                    'bold'  => true,
                     'color' => ['rgb' => '334155'],
                 ],
             ]);
 
-            // Pre-fill existing grades if any
+            // Pre-fill regular mapel grades
+            $nilaiByMapel = $s->nilai->keyBy('mapel_id');
             foreach ($allMapel as $mapelIndex => $m) {
-                $colLetter = $this->columnLetter(2 + $mapelIndex);
-                
-                $existingNilai = Nilai::where('siswa_id', $s->id)
-                    ->where('mapel_id', $m->id)
-                    ->first();
-                
+                $colLetter   = $this->columnLetter(2 + $mapelIndex);
+                $existingNilai = $nilaiByMapel->get($m->id);
                 if ($existingNilai && $existingNilai->nilai !== null) {
                     $sheet->setCellValue($colLetter . $row, $existingNilai->nilai);
                 }
-
-                // Center align grade cells
                 $sheet->getStyle($colLetter . $row)->applyFromArray([
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+            }
+
+            // Pre-fill TKA grades
+            $tkaByMapel = $s->tka->keyBy('mapel');
+            $tkaColumns = [
+                $tkaStartColIndex     => 'Matematika',
+                $tkaStartColIndex + 1 => 'Bahasa Indonesia',
+            ];
+            foreach ($tkaColumns as $colIndex => $tkaMapelName) {
+                $colLetter   = $this->columnLetter($colIndex);
+                $existingTka = $tkaByMapel->get($tkaMapelName);
+                if ($existingTka) {
+                    $sheet->setCellValue($colLetter . $row, $existingTka->nilai);
+                }
+                $sheet->getStyle($colLetter . $row)->applyFromArray([
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                    'fill' => [
+                        'fillType'   => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'FFFBEB'], // amber-50 tint
+                    ],
                 ]);
             }
 
@@ -294,30 +334,32 @@ class SiswaController extends Controller
         $sheet->getColumnDimension('B')->setWidth(35);
         foreach ($allMapel as $mapelIndex => $m) {
             $colLetter = $this->columnLetter(2 + $mapelIndex);
-            $width = max(strlen($m->nama_mapel) + 4, 14);
+            $width     = max(strlen($m->nama_mapel) + 4, 14);
             $sheet->getColumnDimension($colLetter)->setWidth($width);
         }
+        // TKA column widths
+        $sheet->getColumnDimension($this->columnLetter($tkaStartColIndex))->setWidth(18);
+        $sheet->getColumnDimension($this->columnLetter($tkaStartColIndex + 1))->setWidth(22);
 
-        // --- Add grid borders to data area ---
+        // --- Grid borders on entire data area ---
         $lastDataRow = max($row - 1, 2);
-        $dataRange = 'A1:' . $lastColLetter . $lastDataRow;
-        $sheet->getStyle($dataRange)->applyFromArray([
+        $sheet->getStyle('A1:' . $lastColLetter . $lastDataRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => 'CBD5E1'],
+                    'color'       => ['rgb' => 'CBD5E1'],
                 ],
             ],
         ]);
 
-        // --- Add note row ---
+        // --- Note row ---
         $noteRow = $lastDataRow + 2;
-        $sheet->setCellValue('A' . $noteRow, 'Catatan: Kolom Nama Siswa sudah terisi otomatis. Isi nilai (0-100) pada kolom masing-masing mata pelajaran.');
+        $sheet->setCellValue('A' . $noteRow, 'Catatan: Kolom Nama Siswa sudah terisi otomatis. Isi nilai (0-100) pada kolom mapel (biru) dan kolom TKA (coklat).');
         $sheet->getStyle('A' . $noteRow)->getFont()->setItalic(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF888888'));
         $sheet->mergeCells('A' . $noteRow . ':' . $lastColLetter . $noteRow);
 
         // Stream response
-        $writer = new Xlsx($spreadsheet);
+        $writer   = new Xlsx($spreadsheet);
         $filename = 'template_import_nilai.xlsx';
 
         return response()->streamDownload(function () use ($writer) {
@@ -345,7 +387,7 @@ class SiswaController extends Controller
         $import = new NilaiImport();
         Excel::import($import, $request->file('file'));
 
-        $message = "Berhasil memperbarui {$import->updated} nilai.";
+        $message = "Berhasil memperbarui {$import->updated} nilai mapel dan {$import->tkaUpdated} nilai TKA.";
         if ($import->skipped > 0) {
             $message .= " {$import->skipped} baris dilewati.";
         }

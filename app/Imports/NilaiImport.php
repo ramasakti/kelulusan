@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Mapel;
 use App\Models\Nilai;
 use App\Models\Siswa;
+use App\Models\TKA;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -12,14 +13,23 @@ use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 
 class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 {
-    public int $updated = 0;
-    public int $skipped = 0;
-    public array $errors = [];
+    public int $updated    = 0;
+    public int $tkaUpdated = 0;
+    public int $skipped    = 0;
+    public array $errors   = [];
 
     /**
      * Map of normalized mapel names => mapel IDs (built once).
      */
     private array $mapelMap = [];
+
+    /**
+     * Fixed TKA column headings => canonical enum value in the tka table.
+     */
+    private const TKA_COLUMNS = [
+        'tka_matematika'      => 'Matematika',
+        'tka_bahasa_indonesia' => 'Bahasa Indonesia',
+    ];
 
     public function __construct()
     {
@@ -52,35 +62,59 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 continue;
             }
 
-            // Iterate all other columns (skipping 'no' and 'nama_siswa') to find mapel values
+            // Iterate all other columns (skipping 'no' and 'nama_siswa')
             foreach ($rowArray as $heading => $value) {
                 $normalizedHeading = $this->normalizeHeading((string) $heading);
 
-                // Skip the 'no' and 'nama_siswa' columns
+                // Skip non-data columns
                 if (in_array($normalizedHeading, ['no', 'nama_siswa'])) {
                     continue;
                 }
 
-                // Check if this heading matches a known mapel
+                // Skip empty / null values for any column
+                if ($value === null || $value === '') {
+                    continue;
+                }
+
+                // ── TKA branch ──────────────────────────────────────────────
+                if (isset(self::TKA_COLUMNS[$normalizedHeading])) {
+                    if (!is_numeric($value)) {
+                        $this->errors[] = "Baris " . ($index + 2) . ": Nilai TKA \"{$value}\" untuk kolom \"{$heading}\" bukan angka.";
+                        continue;
+                    }
+
+                    $nilaiInt = (int) $value;
+
+                    if ($nilaiInt < 0 || $nilaiInt > 100) {
+                        $this->errors[] = "Baris " . ($index + 2) . ": Nilai TKA \"{$nilaiInt}\" di luar rentang 0-100.";
+                        continue;
+                    }
+
+                    TKA::updateOrCreate(
+                        [
+                            'siswa_id' => $siswa->id,
+                            'mapel'    => self::TKA_COLUMNS[$normalizedHeading],
+                        ],
+                        [
+                            'nilai' => $nilaiInt,
+                        ]
+                    );
+
+                    $this->tkaUpdated++;
+                    continue;
+                }
+
+                // ── Regular Nilai branch ────────────────────────────────────
                 if (!isset($this->mapelMap[$normalizedHeading])) {
                     continue; // Unknown column, skip silently
                 }
 
-                $mapelId = $this->mapelMap[$normalizedHeading];
-                $nilaiValue = $value;
-
-                // Skip empty/null values
-                if ($nilaiValue === null || $nilaiValue === '') {
+                if (!is_numeric($value)) {
+                    $this->errors[] = "Baris " . ($index + 2) . ": Nilai \"{$value}\" untuk mapel \"{$heading}\" bukan angka.";
                     continue;
                 }
 
-                // Validate numeric value
-                if (!is_numeric($nilaiValue)) {
-                    $this->errors[] = "Baris " . ($index + 2) . ": Nilai \"{$nilaiValue}\" untuk mapel \"{$heading}\" bukan angka.";
-                    continue;
-                }
-
-                $nilaiInt = (int) $nilaiValue;
+                $nilaiInt = (int) $value;
 
                 if ($nilaiInt < 0 || $nilaiInt > 100) {
                     $this->errors[] = "Baris " . ($index + 2) . ": Nilai \"{$nilaiInt}\" di luar rentang 0-100.";
@@ -90,7 +124,7 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 Nilai::updateOrCreate(
                     [
                         'siswa_id' => $siswa->id,
-                        'mapel_id' => $mapelId,
+                        'mapel_id' => $this->mapelMap[$normalizedHeading],
                     ],
                     [
                         'nilai' => $nilaiInt,
