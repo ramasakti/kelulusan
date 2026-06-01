@@ -53,6 +53,7 @@ export interface SiswaData {
   rata_rata: number;
   nilai: NilaiItem[];
   tka: NilaiItem[];
+  rata_rata_tka: number;
 }
 
 export interface CountdownSettings {
