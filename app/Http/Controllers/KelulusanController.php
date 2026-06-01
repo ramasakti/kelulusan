@@ -95,8 +95,13 @@ class KelulusanController extends Controller
             ];
         })->values()->all();
 
+        // Hitung rata-rata TKA
+        $tkaCollection = $siswa->tka;
+        $rerataTka = $tkaCollection->isNotEmpty()
+            ? round($tkaCollection->avg('nilai', 2)) : 0;
+
         // Transformasi format nilai TKA untuk dikirim ke props
-        $tkaFormatted = $siswa->tka->map(function ($item) {
+        $tkaFormatted = $siswa->tka->map(function ($item) use ($rerataTka) {
             return [
                 'mata_pelajaran' => $item->mapel,
                 'nilai' => $item->nilai,
@@ -113,6 +118,7 @@ class KelulusanController extends Controller
                 'rata_rata' => (float) $rataRata,
                 'nilai' => $nilaiFormatted,
                 'tka' => $tkaFormatted,
+                'rata_rata_tka' => $rerataTka
             ],
             'error' => null,
             'settings' => $settings,

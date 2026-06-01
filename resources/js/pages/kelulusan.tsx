@@ -324,6 +324,9 @@ export default function Kelulusan({ search, siswa, error, settings, serverTime }
                           <p className="text-xs md:text-sm text-slate-600 max-w-lg leading-relaxed">
                             Kami segenap keluarga besar sekolah mengucapkan selamat atas kelulusan Anda. Teruslah belajar, berkarya, dan raihlah cita-cita setinggi langit!
                           </p>
+                          <p className="text-xs md:text-sm text-slate-600 max-w-lg leading-relaxed">
+                            Silahkan besok hadir ke sekolah untuk doa bersama sebagai bentuk rasa syukur dan arahan selanjutnya.
+                          </p>
                         </div>
                       </>
                     ) : (
@@ -432,6 +435,11 @@ export default function Kelulusan({ search, siswa, error, settings, serverTime }
                         <Award className="w-5 h-5 text-brand-secondary" />
                         Nilai Tes Kemampuan Akademik (TKA)
                       </h3>
+                      <div className="flex items-center space-x-2 bg-brand-soft-bg/20 text-brand-primary px-3.5 py-1.5 rounded-xl border border-brand-soft-bg/30">
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="text-xs font-semibold">Rata-rata:</span>
+                        <span className="text-sm font-bold">{siswa.rata_rata_tka}</span>
+                      </div>
                     </div>
 
                     <div className="overflow-hidden rounded-xl border border-slate-100 shadow-xs">
