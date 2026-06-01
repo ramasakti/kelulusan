@@ -32,6 +32,11 @@ Route::middleware('auth')->group(function () {
     // Download blank Excel template
     Route::get('/siswa/template-download', [SiswaController::class, 'downloadTemplate'])->name('siswa.template.download');
     
+    // Import nilai from Excel
+    Route::post('/nilai/import', [SiswaController::class, 'importNilai'])->name('nilai.import');
+    // Download nilai Excel template (pre-filled with students & mapel)
+    Route::get('/nilai/template-download', [SiswaController::class, 'downloadNilaiTemplate'])->name('nilai.template.download');
+    
     // Dynamic Row Grades update route
     Route::post('/siswa/{siswa}/nilai', [SiswaController::class, 'updateNilai'])->name('siswa.nilai.update');
     

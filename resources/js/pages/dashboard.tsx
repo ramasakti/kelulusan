@@ -123,6 +123,12 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
   const [isImporting, setIsImporting] = useState(false);
   const importFileRef = useRef<HTMLInputElement>(null);
 
+  // --- Import Nilai Dialog States ---
+  const [isImportNilaiOpen, setIsImportNilaiOpen] = useState(false);
+  const [importNilaiFile, setImportNilaiFile] = useState<File | null>(null);
+  const [isImportingNilai, setIsImportingNilai] = useState(false);
+  const importNilaiFileRef = useRef<HTMLInputElement>(null);
+
   // --- Forms ---
   const mapelForm = useForm({
     nama_mapel: "",
@@ -271,6 +277,36 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
 
   const handleDownloadTemplate = () => {
     window.location.href = "/siswa/template-download";
+  };
+
+  // --- Import Nilai Handlers ---
+  const openImportNilai = () => {
+    setImportNilaiFile(null);
+    if (importNilaiFileRef.current) importNilaiFileRef.current.value = "";
+    setIsImportNilaiOpen(true);
+  };
+
+  const handleImportNilaiSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importNilaiFile) return;
+
+    setIsImportingNilai(true);
+    const formData = new FormData();
+    formData.append("file", importNilaiFile);
+    formData.append("_token", (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? "");
+
+    router.post("/nilai/import", formData, {
+      forceFormData: true,
+      onSuccess: () => {
+        setIsImportNilaiOpen(false);
+        setImportNilaiFile(null);
+      },
+      onFinish: () => setIsImportingNilai(false),
+    });
+  };
+
+  const handleDownloadNilaiTemplate = () => {
+    window.location.href = "/nilai/template-download";
   };
 
   const handleDeleteSiswa = () => {
@@ -464,11 +500,19 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                   <div className="flex items-center gap-2 animate-in fade-in-50 duration-200">
                     <Button
                       variant="outline"
+                      onClick={openImportNilai}
+                      className="gap-1.5 rounded-lg cursor-pointer border-emerald-400/50 text-emerald-700 hover:bg-emerald-50"
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      Import Nilai
+                    </Button>
+                    <Button
+                      variant="outline"
                       onClick={openImport}
                       className="gap-1.5 rounded-lg cursor-pointer border-brand-primary/30 text-brand-primary hover:bg-brand-primary/5"
                     >
                       <UploadCloud className="w-4 h-4" />
-                      Import Excel
+                      Import Siswa
                     </Button>
                     <Button onClick={openAddSiswa} className="bg-brand-primary hover:bg-brand-primary/95 text-white gap-1.5 rounded-lg cursor-pointer">
                       <Plus className="w-4 h-4" />
@@ -1155,6 +1199,105 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                 className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer gap-1.5 disabled:opacity-50"
               >
                 {isImporting ? (
+                  <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Mengimpor...</>
+                ) : (
+                  <><UploadCloud className="w-3.5 h-3.5" /> Mulai Import</>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 7. Dialog Import Nilai dari Excel */}
+      <Dialog open={isImportNilaiOpen} onOpenChange={setIsImportNilaiOpen}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
+              Import Nilai dari Excel
+            </DialogTitle>
+            <DialogDescription>
+              Unggah file Excel (.xlsx / .xls / .csv) yang berisi data nilai siswa. Unduh template terlebih dahulu untuk format yang benar.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Download Nilai Template Banner */}
+          <div className="my-1 flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <Download className="w-5 h-5 shrink-0 text-emerald-600" />
+              <div>
+                <p className="text-sm font-semibold text-emerald-800">Unduh Template Nilai</p>
+                <p className="text-[11px] text-emerald-600">Berisi kolom No, Nama Siswa, dan kolom mata pelajaran</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadNilaiTemplate}
+              className="shrink-0 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors cursor-pointer"
+            >
+              Download
+            </button>
+          </div>
+
+          {/* Info Banner */}
+          <div className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+            <AlertCircle className="w-4 h-4 shrink-0 text-blue-500 mt-0.5" />
+            <div className="text-[11px] text-blue-700 leading-relaxed">
+              <p className="font-semibold text-blue-800 mb-0.5">Petunjuk Pengisian:</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>Kolom <strong>Nama Siswa</strong> sudah terisi otomatis, jangan diubah.</li>
+                <li>Isi nilai <strong>0 – 100</strong> pada kolom mata pelajaran.</li>
+                <li>Kolom kosong akan diabaikan (nilai tidak diubah).</li>
+              </ul>
+            </div>
+          </div>
+
+          <form onSubmit={handleImportNilaiSubmit} className="space-y-4">
+            {/* File Drop Zone */}
+            <div
+              className="relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center transition-colors hover:border-emerald-400/60 hover:bg-emerald-50/30 cursor-pointer"
+              onClick={() => importNilaiFileRef.current?.click()}
+            >
+              <UploadCloud className="w-9 h-9 text-slate-300" />
+              {importNilaiFile ? (
+                <>
+                  <p className="text-sm font-bold text-emerald-700">{importNilaiFile.name}</p>
+                  <p className="text-xs text-slate-400">
+                    {(importNilaiFile.size / 1024).toFixed(1)} KB — klik untuk ganti file
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-slate-600">Klik untuk pilih file</p>
+                  <p className="text-xs text-slate-400">Format: .xlsx, .xls, .csv — Maks. 5 MB</p>
+                </>
+              )}
+              <input
+                ref={importNilaiFileRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={(e) => setImportNilaiFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+
+            <DialogFooter className="pt-2 border-t border-slate-50">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsImportNilaiOpen(false)}
+                className="cursor-pointer"
+                disabled={isImportingNilai}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={!importNilaiFile || isImportingNilai}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer gap-1.5 disabled:opacity-50"
+              >
+                {isImportingNilai ? (
                   <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Mengimpor...</>
                 ) : (
                   <><UploadCloud className="w-3.5 h-3.5" /> Mulai Import</>
