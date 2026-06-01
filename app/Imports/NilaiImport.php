@@ -35,7 +35,7 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
     {
         // Build a lookup: lowercase(nama_mapel) => id
         $this->mapelMap = Mapel::all()
-            ->keyBy(fn($m) => $this->normalizeHeading($m->nama_mapel))
+            ->keyBy(fn($m) => $this->normalizeHeading((string) $m->nama_mapel))
             ->map(fn($m) => $m->id)
             ->toArray();
     }
@@ -83,7 +83,7 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                         continue;
                     }
 
-                    $nilaiInt = (int) $value;
+                    $nilaiInt = $value;
 
                     if ($nilaiInt < 0 || $nilaiInt > 100) {
                         $this->errors[] = "Baris " . ($index + 2) . ": Nilai TKA \"{$nilaiInt}\" di luar rentang 0-100.";
@@ -142,6 +142,14 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
      */
     private function normalizeHeading(string $value): string
     {
-        return str_replace(' ', '_', strtolower(trim($value)));
+        $value = strtolower(trim($value));
+
+        // hilangkan titik
+        $value = str_replace('.', '', $value);
+
+        // ubah spasi menjadi underscore
+        $value = preg_replace('/\s+/', '_', $value);
+
+        return $value;
     }
 }

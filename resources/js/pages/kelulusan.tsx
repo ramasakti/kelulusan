@@ -137,11 +137,7 @@ export default function Kelulusan({ search, siswa, error, settings, serverTime }
 
                 {/* School Logo Shield SVG */}
                 <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-inner">
-                  <svg className="w-12 h-12 text-white drop-shadow-md" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M32 4L4 16L32 28L56 18V38H60V16L32 4Z" fill="currentColor" />
-                    <path d="M12 23V39C12 45.6 21 51 32 51C43 51 52 45.6 52 39V23L32 32.5L12 23Z" fill="currentColor" opacity="0.85" />
-                    <path d="M32 36L20 31V37.5C20 41 25.4 44 32 44C38.6 44 44 41 44 37.5V31L32 36Z" fill="currentColor" />
-                  </svg>
+                  <img className="w-20" src="https://smpislamparlaungan.sch.id/data_website/image_main/logo1.png" alt="Logo SMP Islam Parlaungan" />
                 </div>
 
                 {/* School Information */}
