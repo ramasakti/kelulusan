@@ -150,6 +150,9 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
         // ubah spasi menjadi underscore
         $value = preg_replace('/\s+/', '_', $value);
 
+        // pertahankan huruf, angka, underscore, koma, dan tanda hubung
+        $value = preg_replace('/[^a-z0-9_,-]/', '', $value);
+
         return $value;
     }
 }
