@@ -104,7 +104,6 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                     continue;
                 }
 
-                dd($this->mapelMap, $rowArray);
                 // ── Regular Nilai branch ────────────────────────────────────
                 if (!isset($this->mapelMap[$normalizedHeading])) {
                     continue; // Unknown column, skip silently
