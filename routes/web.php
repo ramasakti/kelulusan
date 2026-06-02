@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 // Public Routes (Graduation announcement search)
 Route::get('/', [KelulusanController::class, 'index'])->name('kelulusan.index');
 Route::get('/kelulusan', [KelulusanController::class, 'index']);
+Route::get('/tes', [KelulusanController::class, 'index']);
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
