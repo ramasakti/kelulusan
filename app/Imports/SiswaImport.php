@@ -29,7 +29,7 @@ class SiswaImport implements ToCollection, WithHeadingRow, WithValidation, Skips
             // Skip duplicate NISN – update if already exists
             Siswa::updateOrCreate(
                 ['nisn' => $nisn],
-                ['nama_siswa' => $nama, 'lulus' => true]
+                ['nama_siswa' => $nama, 'lulus' => 'LULUS']
             );
 
             $this->imported++;
