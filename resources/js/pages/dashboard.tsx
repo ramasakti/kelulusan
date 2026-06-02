@@ -1061,7 +1061,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                 <Label htmlFor="tka_matematika" className="font-semibold text-slate-700">TKA Matematika</Label>
                 <Input
                   id="tka_matematika"
-                  type="number"
+                  type="text"
                   min="0"
                   max="100"
                   placeholder="Nilai Matematika (0-100)"
@@ -1081,7 +1081,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                 <Label htmlFor="tka_bahasa_indo" className="font-semibold text-slate-700">TKA Bahasa Indonesia</Label>
                 <Input
                   id="tka_bahasa_indo"
-                  type="number"
+                  type="text"
                   min="0"
                   max="100"
                   placeholder="Nilai B. Indonesia (0-100)"
