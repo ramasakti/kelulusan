@@ -18,10 +18,6 @@ class Siswa extends Model
         'lulus',
     ];
 
-    protected $casts = [
-        'lulus' => 'boolean',
-    ];
-
     /**
      * Get the nilai for the siswa.
      */

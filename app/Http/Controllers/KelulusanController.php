@@ -114,7 +114,7 @@ class KelulusanController extends Controller
             'siswa' => [
                 'nama_siswa' => $siswa->nama_siswa,
                 'nisn' => $siswa->nisn,
-                'status_kelulusan' => $siswa->lulus ? 'LULUS' : 'TIDAK LULUS',
+                'status_kelulusan' => $siswa->lulus,
                 'rata_rata' => (float) $rataRata,
                 'nilai' => $nilaiFormatted,
                 'tka' => $tkaFormatted,

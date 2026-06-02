@@ -16,7 +16,8 @@ import {
   RefreshCw,
   Clock,
   Lock,
-  Calendar
+  Calendar,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +50,7 @@ export interface NilaiItem {
 export interface SiswaData {
   nama_siswa: string;
   nisn: string;
-  status_kelulusan: "LULUS" | "TIDAK LULUS";
+  status_kelulusan: "LULUS" | "BELUM LULUS" | "DITANGGUHKAN";
   rata_rata: number;
   nilai: NilaiItem[];
   tka: NilaiItem[];
@@ -76,7 +77,7 @@ export default function Kelulusan({ search, siswa, error, settings, serverTime }
 
   const targetDate = new Date(settings?.start || new Date());
   const endDate = new Date(settings?.end || new Date());
-  
+
   const [now, setNow] = useState<Date>(() => new Date(serverTime || new Date()));
 
   useEffect(() => {
@@ -165,11 +166,11 @@ export default function Kelulusan({ search, siswa, error, settings, serverTime }
                     Pengumuman Kelulusan
                   </h1>
                   <p className="text-xs md:text-sm max-w-md mx-auto text-white/80 leading-relaxed font-light">
-                    {isBefore 
+                    {isBefore
                       ? "Pengecekan status kelulusan siswa tahun ajaran 2025/2026 belum dibuka. Silakan tunggu hingga hitung mundur selesai."
-                      : isAfter 
-                      ? "Masa pencarian status kelulusan siswa tahun ajaran 2025/2026 telah berakhir."
-                      : "Masukkan Nomor Induk Siswa Nasional (NISN) Anda pada kolom di bawah untuk memeriksa status kelulusan tahun ajaran 2025/2026."
+                      : isAfter
+                        ? "Masa pencarian status kelulusan siswa tahun ajaran 2025/2026 telah berakhir."
+                        : "Masukkan Nomor Induk Siswa Nasional (NISN) Anda pada kolom di bawah untuk memeriksa status kelulusan tahun ajaran 2025/2026."
                     }
                   </p>
                 </div>
@@ -311,18 +312,42 @@ export default function Kelulusan({ search, siswa, error, settings, serverTime }
                         <div className="p-3 bg-emerald-100 dark:bg-emerald-950/30 rounded-full animate-bounce">
                           <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
                         </div>
+
                         <Badge variant="success" className="px-5 py-1.5 text-sm font-bold uppercase tracking-wider rounded-full shadow-xs">
                           {siswa.status_kelulusan}
                         </Badge>
+
                         <div className="space-y-2">
                           <h3 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
                             Selamat! Anda dinyatakan LULUS.
                           </h3>
+
                           <p className="text-xs md:text-sm text-slate-600 max-w-lg leading-relaxed">
                             Kami segenap keluarga besar sekolah mengucapkan selamat atas kelulusan Anda. Teruslah belajar, berkarya, dan raihlah cita-cita setinggi langit!
                           </p>
+
                           <p className="text-xs md:text-sm text-slate-600 max-w-lg leading-relaxed">
                             Silahkan besok hadir ke sekolah untuk doa bersama sebagai bentuk rasa syukur dan arahan selanjutnya.
+                          </p>
+                        </div>
+                      </>
+                    ) : siswa.status_kelulusan === "DITANGGUHKAN" ? (
+                      <>
+                        <div className="p-3 bg-amber-100 dark:bg-amber-950/30 rounded-full">
+                          <AlertTriangle className="w-12 h-12 text-amber-600 dark:text-amber-400" />
+                        </div>
+
+                        <Badge variant="secondary" className="px-5 py-1.5 text-sm font-bold uppercase tracking-wider rounded-full shadow-xs">
+                          {siswa.status_kelulusan}
+                        </Badge>
+
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-400">
+                            Status Kelulusan: Ditangguhkan
+                          </h3>
+
+                          <p className="text-xs md:text-sm text-slate-600 max-w-lg leading-relaxed">
+                            Seluruh proses telah selesai namun Anda memiliki catatan khusus terkait etika dan perilaku. Mohon untuk menghubungi Kepala Sekolah.
                           </p>
                         </div>
                       </>
@@ -331,15 +356,18 @@ export default function Kelulusan({ search, siswa, error, settings, serverTime }
                         <div className="p-3 bg-rose-100 dark:bg-rose-950/30 rounded-full">
                           <XCircle className="w-12 h-12 text-rose-600 dark:text-rose-400" />
                         </div>
+
                         <Badge variant="danger" className="px-5 py-1.5 text-sm font-bold uppercase tracking-wider rounded-full shadow-xs">
                           {siswa.status_kelulusan}
                         </Badge>
+
                         <div className="space-y-2">
                           <h3 className="text-lg font-semibold text-rose-800 dark:text-rose-400">
                             Status Kelulusan: Belum Lulus
                           </h3>
+
                           <p className="text-xs md:text-sm text-slate-600 max-w-lg leading-relaxed">
-                            Terima kasih telah mengikuti seluruh proses pendidikan. Silakan menghubungi pihak sekolah untuk informasi lebih lanjut.
+                            Masih terdapat proses ujian yang belum selesai. Silakan menghubungi Wali Kelas atau Waka Kesiswaan.
                           </p>
                         </div>
                       </>

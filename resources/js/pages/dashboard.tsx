@@ -1,17 +1,17 @@
 import React, { useState, useRef } from "react";
 import { Head, useForm, router } from "@inertiajs/react";
-import { 
-  School, 
-  LayoutDashboard, 
-  LogOut, 
-  BookOpen, 
-  Users, 
-  Plus, 
-  Edit3, 
-  Trash2, 
-  Settings, 
-  Check, 
-  X, 
+import {
+  School,
+  LayoutDashboard,
+  LogOut,
+  BookOpen,
+  Users,
+  Plus,
+  Edit3,
+  Trash2,
+  Settings,
+  Check,
+  X,
   UserCheck,
   TrendingUp,
   Award,
@@ -30,23 +30,23 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogFooter, 
-  DialogTitle, 
-  DialogDescription 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
-import { 
-  AlertDialog, 
-  AlertDialogContent, 
-  AlertDialogHeader, 
-  AlertDialogFooter, 
-  AlertDialogTitle, 
-  AlertDialogDescription, 
-  AlertDialogAction, 
-  AlertDialogCancel 
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel
 } from "@/components/ui/alert-dialog";
 
 // TypeScript Interfaces
@@ -76,7 +76,7 @@ export interface Student {
   id: number;
   nisn: string;
   nama_siswa: string;
-  lulus: boolean;
+  lulus: string;
   nilai: StudentGradeRelation[];
   tka?: TkaGradeRelation[];
   created_at?: string;
@@ -109,7 +109,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
   // --- Delete Confirm States ---
   const [isDeleteMapelOpen, setIsDeleteMapelOpen] = useState(false);
   const [mapelToDelete, setMapelToDelete] = useState<Mapel | null>(null);
-  
+
   const [isDeleteSiswaOpen, setIsDeleteSiswaOpen] = useState(false);
   const [siswaToDelete, setSiswaToDelete] = useState<Student | null>(null);
 
@@ -137,7 +137,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
   const siswaForm = useForm({
     nisn: "",
     nama_siswa: "",
-    lulus: "1", // Representing boolean true
+    lulus: "LULUS", // Representing boolean true
   });
 
   const nilaiForm = useForm({
@@ -218,7 +218,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
     siswaForm.setData({
       nisn: item.nisn,
       nama_siswa: item.nama_siswa,
-      lulus: item.lulus ? "1" : "0",
+      lulus: item.lulus,
     });
     siswaForm.clearErrors();
     setSelectedSiswa(item);
@@ -397,6 +397,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
     router.post("/logout");
   };
 
+  console.log(siswa);
   return (
     <>
       <Head>
@@ -404,10 +405,10 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
       </Head>
 
       <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans">
-        
+
         {/* Sidebar Kiri */}
         <aside className="w-full md:w-64 bg-brand-primary text-white flex flex-col shrink-0">
-          
+
           {/* Logo & School Header */}
           <div className="p-6 border-b border-white/10 flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg">
@@ -427,11 +428,10 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
           <nav className="flex-1 p-4 space-y-1">
             <button
               onClick={() => setActiveTab("mapel")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === "mapel" || activeTab === "siswa"
-                  ? "bg-white/15 text-white shadow-xs" 
-                  : "text-white/70 hover:text-white hover:bg-white/5"
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all cursor-pointer ${activeTab === "mapel" || activeTab === "siswa"
+                ? "bg-white/15 text-white shadow-xs"
+                : "text-white/70 hover:text-white hover:bg-white/5"
+                }`}
             >
               <LayoutDashboard className="w-4 h-4" />
               Dashboard
@@ -453,7 +453,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col overflow-hidden min-h-screen">
-          
+
           {/* Main Top Header */}
           <header className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between shrink-0">
             <div>
@@ -469,10 +469,10 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
 
           {/* Core Panel Content */}
           <div className="flex-1 p-6 overflow-y-auto space-y-6">
-            
+
             {/* Tabs & Content */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              
+
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
                 <TabsList className="bg-slate-100 p-1">
                   <TabsTrigger value="mapel" className="gap-2">
@@ -488,7 +488,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                     Pengaturan Waktu
                   </TabsTrigger>
                 </TabsList>
-                
+
                 {/* Dynamically display action button on top-right based on active tab */}
                 {activeTab === "mapel" && (
                   <Button onClick={openAddMapel} className="bg-brand-primary hover:bg-brand-primary/95 text-white gap-1.5 rounded-lg cursor-pointer animate-in fade-in-50 duration-200">
@@ -529,7 +529,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                     <CardTitle className="text-base font-bold text-slate-800">Daftar Mata Pelajaran</CardTitle>
                     <CardDescription>Manajemen data mata pelajaran kurikulum kelulusan sekolah.</CardDescription>
                   </CardHeader>
-                  
+
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader className="bg-slate-50/50">
@@ -539,7 +539,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                           <TableHead className="w-40 text-center font-bold text-slate-600">Aksi</TableHead>
                         </TableRow>
                       </TableHeader>
-                      
+
                       <TableBody>
                         {mapel.length > 0 ? (
                           mapel.map((item, index) => (
@@ -548,17 +548,17 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                               <TableCell className="font-semibold text-slate-800">{item.nama_mapel}</TableCell>
                               <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-1.5">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
                                     onClick={() => openEditMapel(item)}
                                     className="h-8 w-8 p-0 text-slate-500 hover:text-brand-primary border-slate-200 cursor-pointer"
                                     title="Edit Mapel"
                                   >
                                     <Edit3 className="w-3.5 h-3.5" />
                                   </Button>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="destructive"
                                     onClick={() => confirmDeleteMapel(item)}
                                     className="h-8 w-8 p-0 bg-rose-50 text-rose-600 hover:bg-rose-100 border-none cursor-pointer"
@@ -611,13 +611,11 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                               <TableCell className="font-mono text-sm font-semibold text-slate-700">{item.nisn}</TableCell>
                               <TableCell className="font-semibold text-slate-800">{item.nama_siswa}</TableCell>
                               <TableCell className="text-center">
-                                <Badge variant={item.lulus ? "success" : "danger"} className="rounded-full font-bold">
-                                  {item.lulus ? "LULUS" : "TIDAK LULUS"}
-                                </Badge>
+                                {item.lulus}
                               </TableCell>
                               <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-1.5">
-                                  <Button 
+                                  <Button
                                     size="sm"
                                     onClick={() => openAturNilai(item)}
                                     className="bg-brand-secondary hover:bg-brand-secondary/90 text-white font-semibold text-xs px-3.5 h-8 gap-1 rounded-lg cursor-pointer"
@@ -626,17 +624,17 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                                     <Settings className="w-3.5 h-3.5" />
                                     Atur Nilai
                                   </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
                                     onClick={() => openEditSiswa(item)}
                                     className="h-8 w-8 p-0 text-slate-500 hover:text-brand-primary border-slate-200 cursor-pointer"
                                     title="Edit Biodata"
                                   >
                                     <Edit3 className="w-3.5 h-3.5" />
                                   </Button>
-                                  <Button 
-                                    size="sm" 
+                                  <Button
+                                    size="sm"
                                     variant="destructive"
                                     onClick={() => confirmDeleteSiswa(item)}
                                     className="h-8 w-8 p-0 bg-rose-50 text-rose-600 hover:bg-rose-100 border-none cursor-pointer"
@@ -673,7 +671,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                       Atur rentang waktu (start & end datetime) kapan pencarian data kelulusan siswa dapat diakses oleh publik.
                     </CardDescription>
                   </CardHeader>
-                  
+
                   <CardContent className="p-6">
                     <form onSubmit={handleSettingsSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -716,8 +714,8 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                         <div className="text-xs text-slate-400">
                           Status file: <Badge variant="success" className="rounded-full bg-emerald-50 text-emerald-700 font-bold border-none">range.json terhubung</Badge>
                         </div>
-                        <Button 
-                          type="submit" 
+                        <Button
+                          type="submit"
                           disabled={settingsForm.processing}
                           className="bg-brand-primary hover:bg-brand-primary/95 text-white font-semibold rounded-lg shadow-sm gap-2 cursor-pointer transition-all"
                         >
@@ -774,16 +772,16 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
             </div>
 
             <DialogFooter className="pt-4 border-t border-slate-50">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsMapelOpen(false)}
                 className="cursor-pointer"
               >
                 Batal
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={mapelForm.processing}
                 className="bg-brand-primary hover:bg-brand-primary/95 text-white cursor-pointer gap-1.5"
               >
@@ -847,8 +845,9 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                 disabled={siswaForm.processing}
                 className="focus-visible:ring-brand-primary"
               >
-                <option value="1">LULUS</option>
-                <option value="0">TIDAK LULUS</option>
+                <option value="LULUS">LULUS</option>
+                <option value="BELUM LULUS">BELUM LULUS</option>
+                <option value="DITANGGUHKAN">DITANGGUHKAN</option>
               </Select>
               {siswaForm.errors.lulus && (
                 <p className="text-xs text-rose-500 font-medium mt-1">{siswaForm.errors.lulus}</p>
@@ -856,16 +855,16 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
             </div>
 
             <DialogFooter className="pt-4 border-t border-slate-50">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsSiswaOpen(false)}
                 className="cursor-pointer"
               >
                 Batal
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={siswaForm.processing}
                 className="bg-brand-primary hover:bg-brand-primary/95 text-white cursor-pointer gap-1.5"
               >
@@ -945,7 +944,7 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
 
           {/* Dynamic Row Form Container */}
           <form onSubmit={handleNilaiSubmit} className="flex-1 flex flex-col overflow-hidden pt-4 space-y-4">
-            
+
             {/* Display General Validation Errors (like duplicate distinct validation) */}
             {Object.keys(nilaiForm.errors).some(k => k.startsWith('nilai')) && (
               <div className="shrink-0 bg-rose-50/50 border border-rose-100 rounded-xl p-3 flex items-start gap-2">
@@ -984,13 +983,13 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
                   const availableMapels = getAvailableMapels(index);
                   // Find currently selected mapel (in case it is already selected, it should be listed in options of this row)
                   const currentSelectedMapel = mapel.find(m => String(m.id) === row.mapel_id);
-                  const optionsList = currentSelectedMapel 
-                    ? [currentSelectedMapel, ...availableMapels] 
+                  const optionsList = currentSelectedMapel
+                    ? [currentSelectedMapel, ...availableMapels]
                     : availableMapels;
 
                   return (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-2xs animate-in fade-in-0 duration-150"
                     >
                       {/* Column 1: Mapel Select */}
@@ -1101,16 +1100,16 @@ export default function Dashboard({ mapel, siswa, settings }: DashboardProps) {
 
             {/* Footer buttons */}
             <DialogFooter className="shrink-0 pt-4 border-t border-slate-100">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsNilaiOpen(false)}
                 className="cursor-pointer"
               >
                 Batal
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={nilaiForm.processing}
                 className="bg-brand-primary hover:bg-brand-primary/95 text-white cursor-pointer gap-1.5"
               >

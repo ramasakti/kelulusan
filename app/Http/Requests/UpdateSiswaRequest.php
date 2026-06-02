@@ -25,7 +25,7 @@ class UpdateSiswaRequest extends FormRequest
         return [
             'nisn' => ['required', 'string', 'max:15', 'unique:siswa,nisn,' . $id],
             'nama_siswa' => ['required', 'string', 'max:255'],
-            'lulus' => ['required', 'boolean'],
+            'lulus' => ['required', 'string'],
         ];
     }
 
