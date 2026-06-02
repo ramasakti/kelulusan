@@ -16,7 +16,11 @@ class DashboardController extends Controller
     public function index(): InertiaResponse
     {
         $mapel = Mapel::orderBy('nama_mapel')->get();
-        $siswa = Siswa::with(['nilai.mapel', 'tka'])
+        $siswa = Siswa::with([
+            'nilai' => fn($q) => $q->orderBy('mapel_id'),
+            'nilai.mapel',
+            'tka'
+        ])
             ->orderBy('nama_siswa')
             ->get();
 
@@ -53,7 +57,7 @@ class DashboardController extends Controller
         ]);
 
         $settingsPath = storage_path('app/settings/range.json');
-        
+
         if (!file_exists(dirname($settingsPath))) {
             mkdir(dirname($settingsPath), 0755, true);
         }

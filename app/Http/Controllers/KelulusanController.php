@@ -66,7 +66,11 @@ class KelulusanController extends Controller
         }
 
         // Cari siswa berdasarkan nisn dengan eager loading nilai, mapel, dan tka
-        $siswa = Siswa::with(['nilai.mapel', 'tka'])
+        $siswa = Siswa::with([
+            'nilai' => fn($q) => $q->orderBy('mapel_id'),
+            'nilai.mapel',
+            'tka'
+        ])
             ->where('nisn', $nisn)
             ->first();
 
@@ -83,8 +87,8 @@ class KelulusanController extends Controller
 
         // Hitung rata-rata nilai
         $nilaiCollection = $siswa->nilai;
-        $rataRata = $nilaiCollection->isNotEmpty() 
-            ? round($nilaiCollection->avg('nilai'), 2) 
+        $rataRata = $nilaiCollection->isNotEmpty()
+            ? round($nilaiCollection->avg('nilai'), 2)
             : 0;
 
         // Transformasi format nilai untuk dikirim ke props

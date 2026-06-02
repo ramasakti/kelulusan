@@ -104,6 +104,7 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                     continue;
                 }
 
+                dd($this->mapelMap, $rowArray);
                 // ── Regular Nilai branch ────────────────────────────────────
                 if (!isset($this->mapelMap[$normalizedHeading])) {
                     continue; // Unknown column, skip silently
@@ -144,14 +145,17 @@ class NilaiImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
     {
         $value = strtolower(trim($value));
 
-        // hilangkan titik
+        // Hilangkan titik
         $value = str_replace('.', '', $value);
 
-        // ubah spasi menjadi underscore
+        // Ganti koma dan tanda hubung menjadi spasi (sebelum replace spasi)
+        $value = str_replace([',', '-'], ' ', $value);
+
+        // Ubah spasi (termasuk hasil konversi di atas) menjadi underscore
         $value = preg_replace('/\s+/', '_', $value);
 
-        // pertahankan huruf, angka, underscore, koma, dan tanda hubung
-        $value = preg_replace('/[^a-z0-9_,-]/', '', $value);
+        // Hanya pertahankan huruf, angka, underscore
+        $value = preg_replace('/[^a-z0-9_]/', '', $value);
 
         return $value;
     }
